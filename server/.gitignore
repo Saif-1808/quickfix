@@ -1,0 +1,17 @@
+# ========================
+# Server .gitignore
+# ========================
+
+# Dependencies
+node_modules/
+
+# Environment secrets (use Vercel dashboard for production vars)
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Vercel
+.vercel

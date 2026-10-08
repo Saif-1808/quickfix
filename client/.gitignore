@@ -1,0 +1,22 @@
+# ========================
+# Client .gitignore
+# ========================
+
+# Dependencies
+node_modules/
+
+# Build output (Vercel builds this itself)
+dist/
+build/
+
+# Environment secrets
+.env
+.env.local
+.env.production
+
+# Logs
+*.log
+npm-debug.log*
+
+# Vercel
+.vercel
