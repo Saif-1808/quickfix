@@ -61,3 +61,12 @@ export const userService = {
 export const adminService = {
   getStats: () => api.get('/admin/stats'),
 };
+
+// Service Requests (Provider submission + Admin approval)
+export const serviceRequestService = {
+  create: (data) => api.post('/service-requests', data),
+  getMy: () => api.get('/service-requests/my'),
+  getAll: (params) => api.get('/service-requests', { params }),
+  review: (id, data) => api.patch(`/service-requests/${id}/review`, data),
+  resubmit: (id, data) => api.patch(`/service-requests/${id}/resubmit`, data),
+};

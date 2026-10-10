@@ -8,6 +8,7 @@ const NAV = [
   { to: '/admin/dashboard', end: true, icon: '🏠', label: 'Dashboard' },
   { section: 'Management' },
   { to: '/admin/providers', icon: '🔧', label: 'Providers' },
+  { to: '/admin/service-requests', icon: '📨', label: 'Service Requests' },
   { to: '/admin/services', icon: '⚙️', label: 'Services' },
   { to: '/admin/users', icon: '👥', label: 'Users' },
   { to: '/admin/bookings', icon: '📋', label: 'Bookings' },

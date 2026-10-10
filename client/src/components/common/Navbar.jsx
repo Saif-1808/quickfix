@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Menu, X, Zap } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 
 const Navbar = () => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -33,8 +33,7 @@ const Navbar = () => {
       <nav className="navbar">
         <div className="container">
           <Link to="/" className="navbar-brand">
-            <div className="logo-icon"><Zap size={20} color="#fff" /></div>
-            QuickFix
+            <img src="/logo.png" alt="QuickFix" style={{ height: 36, width: 'auto', objectFit: 'contain' }} />
           </Link>
 
           <div className="navbar-nav">

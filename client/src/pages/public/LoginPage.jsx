@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Zap, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Navbar from '../../components/common/Navbar';
 
@@ -33,20 +33,7 @@ const LoginPage = () => {
     }
   };
 
-  const demoLogin = async (email, password) => {
-    setForm({ email, password });
-    setLoading(true);
-    setError('');
-    try {
-      const user = await login(email, password);
-      toast.success(`Logged in as ${user.name}`);
-      if (user.role === 'admin') navigate('/admin/dashboard');
-      else if (user.role === 'provider') navigate('/provider/dashboard');
-      else navigate('/customer/dashboard');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Login failed.');
-    } finally { setLoading(false); }
-  };
+
 
   return (
     <>
@@ -56,10 +43,7 @@ const LoginPage = () => {
           {/* Logo */}
           <div className="text-center mb-4">
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.5rem' }}>
-              <div className="logo-icon" style={{ width: 44, height: 44, background: 'linear-gradient(135deg,#6366f1,#0ea5e9)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Zap size={22} color="#fff" />
-              </div>
-              <span style={{ fontSize: '1.5rem', fontWeight: 900 }}>QuickFix</span>
+              <img src="/logo.png" alt="QuickFix" style={{ height: 52, width: 'auto', objectFit: 'contain' }} />
             </div>
             <h2 style={{ fontSize: '1.5rem', marginBottom: '0.35rem' }}>Welcome Back</h2>
             <p style={{ fontSize: '0.9rem' }}>Sign in to your account</p>
@@ -112,27 +96,7 @@ const LoginPage = () => {
                 {loading ? <><span className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }} /> Signing In…</> : 'Sign In'}
               </button>
             </form>
-
             <div className="divider" />
-
-            {/* Demo Credentials */}
-            <div style={{ marginBottom: '1rem' }}>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', textAlign: 'center', marginBottom: '0.75rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Demo Accounts</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                {[
-                  { label: '👑 Admin', email: 'admin@quickfix.com', pwd: 'Admin@123', color: '#a78bfa' },
-                  { label: '👤 Customer', email: 'amit@demo.com', pwd: 'Customer@123', color: '#60a5fa' },
-                  { label: '🔧 Provider', email: 'rahul@demo.com', pwd: 'Provider@123', color: '#34d399' },
-                ].map(d => (
-                  <button key={d.email} type="button" className="btn btn-secondary btn-sm" style={{ justifyContent: 'flex-start', gap: '0.5rem', fontSize: '0.8rem' }}
-                    onClick={() => demoLogin(d.email, d.pwd)} disabled={loading}>
-                    <span style={{ color: d.color, fontWeight: 700 }}>{d.label}</span>
-                    <span style={{ color: 'var(--text-muted)' }}>{d.email}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
             <p className="text-center" style={{ fontSize: '0.875rem' }}>
               Don't have an account?{' '}
               <Link to="/register" style={{ color: 'var(--primary-light)', fontWeight: 600 }}>Create one</Link>

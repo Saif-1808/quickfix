@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import Navbar from '../components/common/Navbar';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, LogOut } from 'lucide-react';
 
 const DashboardLayout = ({ children, navItems, title }) => {
   const { user, logout } = useAuth();
@@ -17,9 +16,47 @@ const DashboardLayout = ({ children, navItems, title }) => {
   const initials = user?.name?.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || 'U';
 
   return (
-    <>
-      <Navbar />
-      <div className="dashboard-layout">
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      {/* Dashboard Top Bar — replaces public Navbar for authenticated dashboard pages */}
+      <header style={{
+        position: 'fixed', top: 0, left: 0, right: 0, height: 'var(--navbar-h)',
+        background: 'rgba(15,17,23,0.95)', backdropFilter: 'blur(12px)',
+        borderBottom: '1px solid var(--border)', zIndex: 1000,
+        display: 'flex', alignItems: 'center', padding: '0 1.25rem', gap: '1rem',
+      }}>
+        {/* Logo */}
+        <Link to="/" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none', flexShrink: 0 }}>
+          <img src="/logo.png" alt="QuickFix" style={{ height: 36, width: 'auto', objectFit: 'contain' }} />
+        </Link>
+
+        <div style={{ flex: 1 }} />
+
+        {/* Role badge */}
+        <span style={{ background: 'rgba(99,102,241,0.15)', color: 'var(--primary-light)', border: '1px solid rgba(99,102,241,0.3)', borderRadius: 100, padding: '0.2rem 0.75rem', fontSize: '0.75rem', fontWeight: 700, textTransform: 'capitalize', display: 'flex', alignItems: 'center' }}>
+          {user?.role}
+        </span>
+
+        {/* User name */}
+        <span style={{ fontSize: '0.875rem', color: 'var(--text-secondary)', display: 'none' }} id="dash-username">{user?.name}</span>
+        <style>{`@media(min-width:640px){#dash-username{display:block!important;}}`}</style>
+
+        {/* Logout */}
+        <button onClick={handleLogout} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.875rem', padding: '0.4rem 0.75rem', borderRadius: 8, transition: 'color 0.2s, background 0.2s' }}
+          onMouseEnter={e => e.currentTarget.style.color='var(--danger)'}
+          onMouseLeave={e => e.currentTarget.style.color='var(--text-muted)'}>
+          <LogOut size={16} />
+          <span style={{ display: 'none' }} id="dash-logout-text">Logout</span>
+          <style>{`@media(min-width:640px){#dash-logout-text{display:inline!important;}}`}</style>
+        </button>
+
+        {/* Sidebar toggle (mobile) */}
+        <button className="btn btn-secondary btn-icon" onClick={() => setSidebarOpen(o => !o)} style={{ display: 'none' }} id="dash-sidebar-toggle" aria-label="Open menu">
+          {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+        <style>{`@media(max-width:1024px){#dash-sidebar-toggle{display:flex!important;}}`}</style>
+      </header>
+
+      <div className="dashboard-layout" style={{ paddingTop: 'var(--navbar-h)' }}>
         {/* Sidebar Overlay on mobile */}
         {sidebarOpen && <div className="sidebar-overlay" onClick={() => setSidebarOpen(false)} />}
 
@@ -60,21 +97,10 @@ const DashboardLayout = ({ children, navItems, title }) => {
 
         {/* Main content */}
         <main className="dashboard-main">
-          {/* Mobile top bar */}
-          <div style={{ display: 'none' }} id="mobile-topbar">
-            <button className="btn btn-secondary btn-icon mb-3" onClick={() => setSidebarOpen(true)}>
-              <Menu size={20} />
-            </button>
-          </div>
-          <style>{`@media(max-width:1024px){#mobile-topbar{display:flex!important;}}`}</style>
-          <button className="btn btn-secondary btn-icon mb-3" onClick={() => setSidebarOpen(true)} style={{ display: 'none' }} id="sidebar-toggle">
-            <Menu size={20} />
-          </button>
-          <style>{`@media(max-width:1024px){#sidebar-toggle{display:flex!important;}}`}</style>
           {children}
         </main>
       </div>
-    </>
+    </div>
   );
 };
 

@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import StatusBadge from '../../components/common/StatusBadge';
 import { bookingService, reviewService } from '../../services';
-import { Calendar, Clock, MapPin, User, Star, ArrowLeft } from 'lucide-react';
+import { Calendar, Clock, MapPin, User, Star, ArrowLeft, Phone, IndianRupee, Timer } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const NAV = [
@@ -13,6 +13,13 @@ const NAV = [
   { section: 'Account' },
   { to: '/customer/profile', icon: '👤', label: 'Profile' },
 ];
+
+const InfoRow = ({ label, value, icon }) => (
+  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.875rem', padding: '0.35rem 0', borderBottom: '1px solid var(--border)' }}>
+    <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>{icon}{label}</span>
+    <span style={{ fontWeight: 600, textAlign: 'right' }}>{value}</span>
+  </div>
+);
 
 const CustomerBookingDetail = () => {
   const { id } = useParams();
@@ -63,6 +70,11 @@ const CustomerBookingDetail = () => {
   const stepIdx = STATUS_STEPS.indexOf(booking.status);
   const isTerminal = ['Rejected', 'Cancelled'].includes(booking.status);
 
+  // Provider contact — only show phone after booking is Accepted or beyond
+  const showProviderContact = ['Accepted', 'In Progress', 'Completed'].includes(booking.status);
+  const providerUser = booking.providerId?.userId;
+  const providerPhone = providerUser?.phone;
+
   return (
     <DashboardLayout navItems={NAV} title="Booking Details">
       <div className="page-header">
@@ -97,36 +109,65 @@ const CustomerBookingDetail = () => {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
-        <div className="card">
-          <h5 style={{ marginBottom: '1rem' }}>Provider Info</h5>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Business</span>
-              <span>{booking.providerId?.businessName}</span>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.875rem' }}>
-              <span style={{ color: 'var(--text-muted)' }}>Service</span>
-              <span>{booking.serviceId?.icon} {booking.serviceId?.name}</span>
-            </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+
+        {/* Provider Info Card */}
+        <div className="card" style={{ border: showProviderContact ? '1px solid rgba(16,185,129,0.25)' : undefined }}>
+          <h5 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <User size={16} /> Provider Information
+          </h5>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+            <InfoRow label="Business" value={booking.providerId?.businessName} />
+            <InfoRow label="Service" value={`${booking.serviceId?.icon || ''} ${booking.serviceId?.name || ''}`} />
+            {showProviderContact ? (
+              <>
+                <InfoRow
+                  label="Provider Name"
+                  value={providerUser?.name || '—'}
+                  icon={<User size={12} />}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.875rem', padding: '0.35rem 0', borderBottom: '1px solid var(--border)' }}>
+                  <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <Phone size={12} /> Contact
+                  </span>
+                  {providerPhone ? (
+                    <a href={`tel:${providerPhone}`} style={{ fontWeight: 700, color: 'var(--secondary)', textDecoration: 'none' }}>
+                      📞 {providerPhone}
+                    </a>
+                  ) : (
+                    <span style={{ color: 'var(--text-muted)' }}>Not available</span>
+                  )}
+                </div>
+                <InfoRow label="Location" value={booking.providerId?.location || '—'} />
+              </>
+            ) : (
+              <div style={{ padding: '0.75rem 0', fontSize: '0.825rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                🔒 Provider contact visible after acceptance
+              </div>
+            )}
           </div>
         </div>
 
+        {/* Appointment + Pricing Card */}
         <div className="card">
-          <h5 style={{ marginBottom: '1rem' }}>Appointment</h5>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
-              <Calendar size={14} color="var(--primary-light)" />
-              <span>{booking.bookingDate}</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
-              <Clock size={14} color="var(--secondary)" />
-              <span>{booking.startTime} – {booking.endTime}</span>
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
-              <MapPin size={14} color="var(--accent)" />
-              <span>{booking.address}</span>
-            </div>
+          <h5 style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Calendar size={16} /> Appointment & Pricing
+          </h5>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+            <InfoRow label="Date" value={booking.bookingDate} icon={<Calendar size={12} />} />
+            <InfoRow label="Start Time" value={booking.startTime} icon={<Clock size={12} />} />
+            <InfoRow label="End Time" value={booking.endTime} icon={<Clock size={12} />} />
+            {booking.durationHours && (
+              <InfoRow label="Duration" value={`${booking.durationHours} hour${booking.durationHours > 1 ? 's' : ''}`} icon={<Timer size={12} />} />
+            )}
+            <InfoRow label="Hourly Rate" value={`₹${booking.providerId?.price || '—'}/hr`} icon={<IndianRupee size={12} />} />
+            {booking.totalPrice > 0 ? (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.875rem', padding: '0.5rem 0', marginTop: '0.25rem' }}>
+                <span style={{ color: 'var(--text-muted)' }}>Total Price</span>
+                <span style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--accent)' }}>₹{booking.totalPrice}</span>
+              </div>
+            ) : null}
+            <InfoRow label="Address" value={booking.address} icon={<MapPin size={12} />} />
           </div>
         </div>
       </div>

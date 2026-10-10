@@ -15,7 +15,7 @@ const computeEndTime = (startTime, durationMinutes) => {
 // @access Customer
 const createBooking = async (req, res, next) => {
   try {
-    const { providerId, serviceId, bookingDate, startTime, problemDescription, address, additionalNotes } = req.body;
+    const { providerId, serviceId, bookingDate, startTime, durationHours = 1, problemDescription, address, additionalNotes } = req.body;
     const customerId = req.user._id;
 
     // 1. Validate provider
@@ -25,13 +25,18 @@ const createBooking = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Provider is not available for booking.' });
     }
 
-    // 2. Validate date
+    // 2. Validate duration
+    const dur = parseInt(durationHours, 10);
+    if (isNaN(dur) || dur < 1 || dur > 8) {
+      return res.status(400).json({ success: false, message: 'Duration must be between 1 and 8 hours.' });
+    }
+
+    // 3. Validate date
     const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
     if (!dateRegex.test(bookingDate)) {
       return res.status(400).json({ success: false, message: 'Invalid date format. Use YYYY-MM-DD.' });
     }
 
-    // Prevent past date bookings
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const selectedDate = new Date(bookingDate + 'T00:00:00');
@@ -39,34 +44,49 @@ const createBooking = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Cannot book a date in the past.' });
     }
 
-    // 3. Validate working day
+    // 4. Validate working day
     const dayName = selectedDate.toLocaleDateString('en-US', { weekday: 'long' });
     if (!isWorkingDay(dayName, provider.workingDays)) {
       return res.status(400).json({ success: false, message: `Provider does not work on ${dayName}.` });
     }
 
-    // 4. Validate time slot
+    // 5. Validate start time is a valid slot
     const allSlots = generateTimeSlots(provider.workingStartTime, provider.workingEndTime, provider.slotDuration);
     const validSlot = allSlots.find((s) => s.start === startTime);
     if (!validSlot) {
       return res.status(400).json({ success: false, message: 'Invalid time slot. Please select a valid slot within working hours.' });
     }
 
-    // 5. CRITICAL: Backend double-booking check
-    const existingBooking = await Booking.findOne({
-      providerId,
-      bookingDate,
-      startTime,
-      status: { $in: ['Pending', 'Accepted', 'In Progress'] },
-    });
+    // 6. Compute end time
+    const endTime = computeEndTime(startTime, dur * 60);
 
-    if (existingBooking) {
-      return res.status(409).json({ success: false, message: 'This time slot is no longer available. Please select another time.' });
+    // Validate end time is within working hours
+    if (endTime > provider.workingEndTime) {
+      return res.status(400).json({ success: false, message: `Duration exceeds provider working hours. Provider ends at ${provider.workingEndTime}.` });
     }
 
-    const endTime = computeEndTime(startTime, provider.slotDuration);
+    // 7. CRITICAL: Range-based overlap check for multi-hour bookings
+    // A new booking from startTime to endTime overlaps if any active booking's range intersects
+    const existingBookings = await Booking.find({
+      providerId,
+      bookingDate,
+      status: { $in: ['Pending', 'Accepted', 'In Progress'] },
+    }).select('startTime endTime');
 
-    // 6. Create booking (unique index will catch any race condition)
+    const newStart = startTime;
+    const newEnd = endTime;
+
+    for (const eb of existingBookings) {
+      // Overlap if: eb.start < newEnd AND eb.end > newStart
+      if (eb.startTime < newEnd && eb.endTime > newStart) {
+        return res.status(409).json({ success: false, message: 'This time range overlaps with an existing booking. Please choose a different time or shorter duration.' });
+      }
+    }
+
+    // 8. Calculate total price
+    const totalPrice = provider.price * dur;
+
+    // 9. Create booking
     let booking;
     try {
       booking = await Booking.create({
@@ -76,6 +96,8 @@ const createBooking = async (req, res, next) => {
         bookingDate,
         startTime,
         endTime,
+        durationHours: dur,
+        totalPrice,
         problemDescription,
         address,
         additionalNotes,
@@ -91,7 +113,7 @@ const createBooking = async (req, res, next) => {
 
     const populated = await Booking.findById(booking._id)
       .populate('customerId', 'name email phone')
-      .populate('providerId', 'businessName location price')
+      .populate({ path: 'providerId', populate: { path: 'userId', select: 'name phone' }, select: 'businessName location price userId' })
       .populate('serviceId', 'name icon');
 
     res.status(201).json({ success: true, message: 'Booking created successfully', booking: populated });

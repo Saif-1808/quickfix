@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Star, MapPin, Clock, IndianRupee, Calendar, ChevronLeft, ChevronRight, User, Briefcase, CheckCircle } from 'lucide-react';
 import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
-import { providerService, reviewService } from '../../services';
+import { providerService, reviewService, bookingService } from '../../services';
 import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 
@@ -23,7 +23,7 @@ const ProviderProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [availLoading, setAvailLoading] = useState(false);
   const [booking, setBooking] = useState(false);
-  const [bookingForm, setBookingForm] = useState({ problemDescription: '', address: user?.address || '', additionalNotes: '' });
+  const [bookingForm, setBookingForm] = useState({ problemDescription: '', address: user?.address || '', additionalNotes: '', durationHours: 1 });
   const [step, setStep] = useState('profile'); // profile | book
 
   useEffect(() => {
@@ -70,15 +70,16 @@ const ProviderProfilePage = () => {
     if (!bookingForm.address.trim()) { toast.error('Please enter service address.'); return; }
     setBooking(true);
     try {
-      const res = await import('../../services').then(m => m.bookingService.create({
+      const res = await bookingService.create({
         providerId: id,
         serviceId: provider.serviceId._id,
         bookingDate: formatDate(selectedDate),
         startTime: selectedSlot.time,
+        durationHours: bookingForm.durationHours,
         problemDescription: bookingForm.problemDescription,
         address: bookingForm.address,
         additionalNotes: bookingForm.additionalNotes,
-      }));
+      });
       toast.success('Booking created! Waiting for provider confirmation.');
       navigate(`/customer/bookings/${res.data.booking._id}`);
     } catch (err) {
@@ -232,7 +233,7 @@ const ProviderProfilePage = () => {
               </button>
 
               <h3 style={{ marginBottom: '0.25rem' }}>Book {provider.businessName}</h3>
-              <p style={{ marginBottom: '2rem' }}>Select a date and time slot</p>
+              <p style={{ marginBottom: '2rem' }}>Select a date, time slot, and duration</p>
 
               {/* Date picker */}
               <div className="card mb-3">
@@ -248,7 +249,7 @@ const ProviderProfilePage = () => {
 
               {/* Time slots */}
               <div className="card mb-3">
-                <h5 style={{ marginBottom: '1rem' }}>Available Time Slots</h5>
+                <h5 style={{ marginBottom: '1rem' }}>Available Start Times</h5>
                 {availLoading ? (
                   <div className="loading-center" style={{ padding: '2rem' }}><span className="spinner" /></div>
                 ) : !availability?.isWorkingDay ? (
@@ -275,10 +276,40 @@ const ProviderProfilePage = () => {
               {selectedSlot && (
                 <div className="card fade-in">
                   <h5 style={{ marginBottom: '1rem' }}>Service Details</h5>
-                  <div style={{ background: 'rgba(99,102,241,0.1)', borderRadius: 8, padding: '0.75rem 1rem', marginBottom: '1.25rem', border: '1px solid rgba(99,102,241,0.25)' }}>
-                    <strong style={{ color: 'var(--primary-light)' }}>Selected: </strong>
-                    {formatDisplay(selectedDate)} at {selectedSlot.displayTime} – {selectedSlot.displayEndTime}
+
+                  {/* Duration + Price summary */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label">Duration (hours)</label>
+                      <select className="form-control" value={bookingForm.durationHours}
+                        onChange={e => setBookingForm(f => ({ ...f, durationHours: Number(e.target.value) }))}>
+                        {[1,2,3,4,5,6,7,8].map(h => (
+                          <option key={h} value={h}>{h} hour{h > 1 ? 's' : ''}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div style={{ background: 'rgba(99,102,241,0.1)', borderRadius: 8, padding: '0.75rem 1rem', border: '1px solid rgba(99,102,241,0.25)', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: '0.25rem' }}>
+                        {selectedSlot.displayTime} → {(() => {
+                          const [h, m] = selectedSlot.time.split(':').map(Number);
+                          const end = h * 60 + m + bookingForm.durationHours * 60;
+                          const eh = Math.floor(end / 60);
+                          const em = end % 60;
+                          const t = `${String(eh).padStart(2,'0')}:${String(em).padStart(2,'0')}`;
+                          const period = eh >= 12 ? 'PM' : 'AM';
+                          const h12 = eh === 0 ? 12 : eh > 12 ? eh - 12 : eh;
+                          return `${String(h12).padStart(2,'0')}:${String(em).padStart(2,'0')} ${period}`;
+                        })()}
+                      </div>
+                      <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--accent)' }}>
+                        ₹{provider.price * bookingForm.durationHours}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        ₹{provider.price}/hr × {bookingForm.durationHours}h
+                      </div>
+                    </div>
                   </div>
+
                   <form onSubmit={handleBook}>
                     <div className="form-group">
                       <label className="form-label">Problem Description *</label>
@@ -293,7 +324,7 @@ const ProviderProfilePage = () => {
                       <textarea className="form-control" rows={2} placeholder="Any special instructions..." value={bookingForm.additionalNotes} onChange={e => setBookingForm(f => ({...f, additionalNotes: e.target.value}))} />
                     </div>
                     <button type="submit" className="btn btn-primary btn-full btn-lg" disabled={booking}>
-                      {booking ? <><span className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }} /> Confirming Booking…</> : 'Confirm Booking'}
+                      {booking ? <><span className="spinner" style={{ width: 18, height: 18, borderWidth: 2 }} /> Confirming Booking…</> : `Confirm Booking — ₹${provider.price * bookingForm.durationHours}`}
                     </button>
                   </form>
                 </div>

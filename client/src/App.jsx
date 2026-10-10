@@ -32,6 +32,10 @@ import AdminServices from './pages/admin/AdminServices';
 import AdminUsers from './pages/admin/AdminUsers';
 import AdminBookings from './pages/admin/AdminBookings';
 import AdminReviews from './pages/admin/AdminReviews';
+import AdminServiceRequests from './pages/admin/AdminServiceRequests';
+
+// Provider extra pages
+import ProviderServiceRequests from './pages/provider/ProviderServiceRequests';
 
 // ----- Protected Route Guards -----
 
@@ -151,10 +155,14 @@ const AppRoutes = () => (
     {/* Admin */}
     <Route path="/admin/dashboard" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
     <Route path="/admin/providers" element={<ProtectedRoute requiredRole="admin"><AdminProviders /></ProtectedRoute>} />
+    <Route path="/admin/service-requests" element={<ProtectedRoute requiredRole="admin"><AdminServiceRequests /></ProtectedRoute>} />
     <Route path="/admin/services" element={<ProtectedRoute requiredRole="admin"><AdminServices /></ProtectedRoute>} />
     <Route path="/admin/users" element={<ProtectedRoute requiredRole="admin"><AdminUsers /></ProtectedRoute>} />
     <Route path="/admin/bookings" element={<ProtectedRoute requiredRole="admin"><AdminBookings /></ProtectedRoute>} />
     <Route path="/admin/reviews" element={<ProtectedRoute requiredRole="admin"><AdminReviews /></ProtectedRoute>} />
+
+    {/* Provider extra */}
+    <Route path="/provider/service-requests" element={<ProtectedRoute requiredRole="provider"><ProviderServiceRequests /></ProtectedRoute>} />
 
     {/* Catch all */}
     <Route path="*" element={<NotFoundPage />} />

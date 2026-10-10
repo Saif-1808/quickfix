@@ -11,6 +11,8 @@ const NAV = [
   { section: 'Bookings' },
   { to: '/provider/requests', icon: '📩', label: 'New Requests' },
   { to: '/provider/bookings', icon: '📋', label: 'All Bookings' },
+  { section: 'Services' },
+  { to: '/provider/service-requests', icon: '🔧', label: 'My Service Requests' },
   { section: 'Account' },
   { to: '/provider/profile', icon: '👤', label: 'My Profile' },
   { to: '/provider/reviews', icon: '⭐', label: 'Reviews' },
@@ -60,21 +62,36 @@ const ProviderBookingDetail = () => {
         <StatusBadge status={booking.status} />
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.25rem' }}>
         <div className="card">
           <h5 style={{ marginBottom: '1rem' }}>Customer Info</h5>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}><span style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{booking.customerId?.name}</span></div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}><Phone size={13} /> {booking.customerId?.phone}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
+              <Phone size={13} />
+              {booking.customerId?.phone ? (
+                <a href={`tel:${booking.customerId.phone}`} style={{ color: 'var(--secondary)', fontWeight: 600 }}>{booking.customerId.phone}</a>
+              ) : '—'}
+            </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}><Mail size={13} /> {booking.customerId?.email}</div>
           </div>
         </div>
 
         <div className="card">
-          <h5 style={{ marginBottom: '1rem' }}>Appointment</h5>
+          <h5 style={{ marginBottom: '1rem' }}>Appointment & Pricing</h5>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}><Calendar size={13} color="var(--primary-light)" /> {booking.bookingDate}</div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}><Clock size={13} color="var(--secondary)" /> {booking.startTime} – {booking.endTime}</div>
+            {booking.durationHours && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
+                ⏱ Duration: <strong>{booking.durationHours} hour{booking.durationHours > 1 ? 's' : ''}</strong>
+              </div>
+            )}
+            {booking.totalPrice > 0 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}>
+                💰 Total: <strong style={{ color: 'var(--accent)', fontSize: '1rem' }}>₹{booking.totalPrice}</strong>
+              </div>
+            )}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.875rem' }}><MapPin size={13} color="var(--accent)" /> {booking.address}</div>
           </div>
         </div>

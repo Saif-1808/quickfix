@@ -239,17 +239,22 @@ const getProviderAvailability = async (req, res, next) => {
       status: { $in: ['Pending', 'Accepted', 'In Progress'] },
     }).select('startTime endTime status');
 
-    const bookedTimes = existingBookings.map((b) => b.startTime);
+    // Build list of blocked ranges
+    const bookedRanges = existingBookings.map((b) => ({ start: b.startTime, end: b.endTime }));
 
-    // Build availability response
-    const slots = allSlots.map((slot) => ({
-      time: slot.start,
-      endTime: slot.end,
-      displayTime: slot.displayStart,
-      displayEndTime: slot.displayEnd,
-      available: !bookedTimes.includes(slot.start),
-      reason: bookedTimes.includes(slot.start) ? 'Booked' : null,
-    }));
+    // A slot at time T is available only if no booked range overlaps [T, T+slotDuration]
+    const slots = allSlots.map((slot) => {
+      const slotEnd = slot.end;
+      const isBlocked = bookedRanges.some((r) => r.start < slotEnd && r.end > slot.start);
+      return {
+        time: slot.start,
+        endTime: slot.end,
+        displayTime: slot.displayStart,
+        displayEndTime: slot.displayEnd,
+        available: !isBlocked,
+        reason: isBlocked ? 'Booked' : null,
+      };
+    });
 
     res.status(200).json({
       success: true,

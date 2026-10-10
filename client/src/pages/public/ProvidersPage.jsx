@@ -83,12 +83,27 @@ const ProvidersPage = () => {
             <div className="empty-state">
               <div className="empty-icon">🔍</div>
               <h3>No Providers Found</h3>
-              <p>Try adjusting your search filters or browse all providers.</p>
+              <p>
+                {selectedService
+                  ? 'No approved providers are currently available for this service category.'
+                  : 'Try adjusting your search filters or browse all providers.'}
+              </p>
               <button className="btn btn-primary" onClick={() => { setSearch(''); setSelectedService(''); setLocation(''); }}>Clear Filters</button>
             </div>
           ) : (
             <>
-              <p style={{ marginBottom: '1.5rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>{providers.length} provider{providers.length !== 1 ? 's' : ''} found</p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem', flexWrap: 'wrap' }}>
+                <div style={{ background: 'rgba(99,102,241,0.15)', border: '1px solid rgba(99,102,241,0.3)', borderRadius: 100, padding: '0.3rem 1rem', fontSize: '0.875rem', fontWeight: 700, color: 'var(--primary-light)' }}>
+                  {providers.length} eligible provider{providers.length !== 1 ? 's' : ''} found
+                </div>
+                {(search || selectedService || location) && (
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    {selectedService && services.find(s => s._id === selectedService)?.name ? `in ${services.find(s => s._id === selectedService)?.name}` : ''}
+                    {location ? ` near "${location}"` : ''}
+                    {search ? ` matching "${search}"` : ''}
+                  </span>
+                )}
+              </div>
               <div className="providers-grid">
                 {providers.map(p => <ProviderCard key={p._id} provider={p} />)}
               </div>

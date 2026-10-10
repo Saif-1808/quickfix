@@ -12,6 +12,8 @@ const NAV = [
   { section: 'Bookings' },
   { to: '/provider/requests', icon: '📩', label: 'New Requests' },
   { to: '/provider/bookings', icon: '📋', label: 'All Bookings' },
+  { section: 'Services' },
+  { to: '/provider/service-requests', icon: '🔧', label: 'My Service Requests' },
   { section: 'Account' },
   { to: '/provider/profile', icon: '👤', label: 'My Profile' },
   { to: '/provider/reviews', icon: '⭐', label: 'Reviews' },

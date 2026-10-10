@@ -32,6 +32,19 @@ const bookingSchema = new mongoose.Schema(
       type: String,
       required: [true, 'End time is required'],
     },
+    // Duration in hours (1, 2, 3, ...)
+    durationHours: {
+      type: Number,
+      required: true,
+      min: [1, 'Duration must be at least 1 hour'],
+      max: [8, 'Duration cannot exceed 8 hours'],
+      default: 1,
+    },
+    // Total price = hourlyRate * durationHours
+    totalPrice: {
+      type: Number,
+      default: 0,
+    },
     problemDescription: {
       type: String,
       required: [true, 'Problem description is required'],

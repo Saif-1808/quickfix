@@ -1,16 +1,13 @@
 import { Link } from 'react-router-dom';
-import { Zap, Mail, Phone, MapPin } from 'lucide-react';
+import { Mail } from 'lucide-react';
 
 const Footer = () => (
   <footer className="footer">
     <div className="container">
       <div className="footer-grid">
         <div className="footer-brand">
-          <div className="footer-logo d-flex align-center gap-sm">
-            <div className="logo-icon" style={{ width: 32, height: 32, background: 'linear-gradient(135deg,#6366f1,#0ea5e9)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Zap size={16} color="#fff" />
-            </div>
-            QuickFix
+          <div className="footer-logo">
+            <img src="/logo.png" alt="QuickFix" style={{ height: 40, width: 'auto', objectFit: 'contain' }} />
           </div>
           <p className="footer-desc mt-2">
             Your trusted marketplace for local service professionals. Quality service, right when you need it.
